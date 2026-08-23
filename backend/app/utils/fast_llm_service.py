@@ -79,19 +79,13 @@ class FastLLMService:
             
 
             system_prompt = (
-                f"You are a strict world-class science tutor fluent in {language}. You ONLY explain scientific concepts. "
+                f"You are a world-class science and technology tutor fluent in {language}. You explain scientific, technical, and general concepts clearly. "
                 f"You must output valid JSON. "
                 f"IMPORTANT: JSON Keys must be in English. Values must be in {language}. "
-                f"NON-SCIENTIFIC TERM REJECTION (CRITICAL): If '{query}' is NOT a scientific term (e.g., 'movie', 'actor', 'politics', 'cat'), you MUST refuse to explain it. "
-                f"In this case (NON-SCIENTIFIC): "
-                f"1. Set 'is_scientific' to false. "
-                f"2. Set 'translated_term' and 'corrected_term' to EXACTLY '{query}'. "
-                f"3. Set 'core_term' to '{query}'. "
-                f"4. Set the 'easy', 'medium', and 'hard' fields EXACTLY to: \"'{query}' is not a scientific term. Please enter scientific terms only.\" Translate this message to {language} if {language} is not English. "
-                f"If it IS a scientific term, set 'is_scientific' to true. "
-                f"TYPO DETECTION (STRICT): If the user enters a misspelled scientific word (like 'conept', 'cheistry'), you MUST correct it. "
+                f"Always set 'is_scientific' to true, as you will explain the science and technology behind any term, including everyday objects like laptops or phones. "
+                f"TYPO DETECTION (STRICT): If the user enters a misspelled word (like 'conept', 'cheistry'), you MUST correct it. "
                 f"1. 'is_corrected' MUST be true. "
-                f"2. 'corrected_term' MUST be the single correct scientific term in {language} (e.g., 'Concept'). "
+                f"2. 'corrected_term' MUST be the single correct term in {language} (e.g., 'Concept'). "
                 f"3. 'translated_term' MUST be the SAME as 'corrected_term'. "
                 f"4. 'core_term' MUST be the English equivalent. "
                 f"5. Base ALL explanations on the CORRECTED word. "
@@ -135,10 +129,7 @@ class FastLLMService:
 
             is_scientific = data.get("is_scientific", True)
             
-            # Robust safeguard: force is_scientific to false if the rejection message is present
-            rejection_phrase = "is not a scientific term"
-            if rejection_phrase in easy_def.lower():
-                is_scientific = False
+            # Removed hardcoded safeguard since we now allow all terms
 
             if fetch_media:
                 media_query = data.get("core_term", query)
