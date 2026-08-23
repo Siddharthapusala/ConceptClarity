@@ -1,5 +1,8 @@
 # ConceptClarity
 
+**🌍 Live Frontend:** [https://siddharthapusala.github.io/ConceptClarity/](https://siddharthapusala.github.io/ConceptClarity/)  
+**⚙️ Live Backend API:** [https://conceptclarity-yzxb.onrender.com/docs](https://conceptclarity-yzxb.onrender.com/docs)
+
 ConceptClarity is a premium full-stack web application designed to unlock the mysteries of science with clear, concise, and adaptive explanations. Using state-of-the-art Large Language Models (LLMs) and computer vision, it provides tailored learning experiences across multiple languages and complexity levels.
 
 ## ✨ Features
