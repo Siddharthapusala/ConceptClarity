@@ -17,7 +17,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "https://concept-clarity-scientific-terminology-17an.onrender.com",
-        "https://concept-clarity-scientific-terminology-1-vwip.onrender.com"
+        "https://concept-clarity-scientific-terminology-1-vwip.onrender.com",
+        "https://siddharthapusala.github.io"
     ],
     allow_credentials=True,
     allow_methods=["*"],
