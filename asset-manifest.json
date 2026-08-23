@@ -1,19 +1,19 @@
 {
   "files": {
     "main.css": "/ConceptClarity/static/css/main.2f3539d5.css",
-    "main.js": "/ConceptClarity/static/js/main.7221dc12.js",
+    "main.js": "/ConceptClarity/static/js/main.f5866fab.js",
     "static/js/239.ae6df076.chunk.js": "/ConceptClarity/static/js/239.ae6df076.chunk.js",
     "static/js/977.f67689dd.chunk.js": "/ConceptClarity/static/js/977.f67689dd.chunk.js",
     "static/js/455.ba4a19b7.chunk.js": "/ConceptClarity/static/js/455.ba4a19b7.chunk.js",
     "index.html": "/ConceptClarity/index.html",
     "main.2f3539d5.css.map": "/ConceptClarity/static/css/main.2f3539d5.css.map",
-    "main.7221dc12.js.map": "/ConceptClarity/static/js/main.7221dc12.js.map",
+    "main.f5866fab.js.map": "/ConceptClarity/static/js/main.f5866fab.js.map",
     "239.ae6df076.chunk.js.map": "/ConceptClarity/static/js/239.ae6df076.chunk.js.map",
     "977.f67689dd.chunk.js.map": "/ConceptClarity/static/js/977.f67689dd.chunk.js.map",
     "455.ba4a19b7.chunk.js.map": "/ConceptClarity/static/js/455.ba4a19b7.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.2f3539d5.css",
-    "static/js/main.7221dc12.js"
+    "static/js/main.f5866fab.js"
   ]
 }
