@@ -5,7 +5,12 @@ import base64
 import requests
 import re
 from groq import Groq
+from pathlib import Path
 from dotenv import load_dotenv
+
+# Ensure backend .env is loaded
+env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 load_dotenv()
 
 class FastLLMService:
@@ -13,10 +18,10 @@ class FastLLMService:
     def __init__(self):
         self.api_key = os.getenv("GROQ_API_KEY")
         if not self.api_key:
-            print("❌ GROQ_API_KEY not found in environment!")
+            print("GROQ_API_KEY not found in environment!")
         self.client = Groq(api_key=self.api_key)
-        self.text_model = "llama3-70b-8192"
-        self.fast_text_model = "llama3-8b-8192"
+        self.text_model = "openai/gpt-oss-120b"
+        self.fast_text_model = "openai/gpt-oss-20b"
 
     def get_youtube_video(self, query: str) -> str:
         """Fetch the first YouTube video result for a query via scraping"""
@@ -34,7 +39,7 @@ class FastLLMService:
             
             return None
         except Exception as e:
-            print(f"❌ Error fetching video: {e}")
+            print(f"Error fetching video: {e}")
             return None
 
     def get_fast_explanation(self, query: str, language: str = "English", fetch_media: bool = True) -> dict:
@@ -79,13 +84,19 @@ class FastLLMService:
             
 
             system_prompt = (
-                f"You are a world-class science and technology tutor fluent in {language}. You explain scientific, technical, and general concepts clearly. "
+                f"You are a strict world-class science tutor fluent in {language}. You ONLY explain scientific concepts. "
                 f"You must output valid JSON. "
                 f"IMPORTANT: JSON Keys must be in English. Values must be in {language}. "
-                f"Always set 'is_scientific' to true, as you will explain the science and technology behind any term, including everyday objects like laptops or phones. "
-                f"TYPO DETECTION (STRICT): If the user enters a misspelled word (like 'conept', 'cheistry'), you MUST correct it. "
+                f"NON-SCIENTIFIC TERM REJECTION (CRITICAL): If '{query}' is NOT a scientific term (e.g., 'movie', 'actor', 'politics', 'cat'), you MUST refuse to explain it. "
+                f"In this case (NON-SCIENTIFIC): "
+                f"1. Set 'is_scientific' to false. "
+                f"2. Set 'translated_term' and 'corrected_term' to EXACTLY '{query}'. "
+                f"3. Set 'core_term' to '{query}'. "
+                f"4. Set the 'easy', 'medium', and 'hard' fields EXACTLY to: \"'{query}' is not a scientific term. Please enter scientific terms only.\" Translate this message to {language} if {language} is not English. "
+                f"If it IS a scientific term, set 'is_scientific' to true. "
+                f"TYPO DETECTION (STRICT): If the user enters a misspelled scientific word (like 'conept', 'cheistry'), you MUST correct it. "
                 f"1. 'is_corrected' MUST be true. "
-                f"2. 'corrected_term' MUST be the single correct term in {language} (e.g., 'Concept'). "
+                f"2. 'corrected_term' MUST be the single correct scientific term in {language} (e.g., 'Concept'). "
                 f"3. 'translated_term' MUST be the SAME as 'corrected_term'. "
                 f"4. 'core_term' MUST be the English equivalent. "
                 f"5. Base ALL explanations on the CORRECTED word. "
@@ -112,7 +123,7 @@ class FastLLMService:
                     response_content = response_content[start_idx:end_idx+1]
                 data = json.loads(response_content)
             except json.JSONDecodeError:
-                print(f"❌ JSON Decode Error for {language}")
+                print(f"JSON Decode Error for {language}")
                 raise Exception("Invalid JSON received from LLM")
             
             easy_def = data.get("easy") or data.get("medium") or f"{query} involves complex scientific principles."
@@ -129,9 +140,14 @@ class FastLLMService:
 
             is_scientific = data.get("is_scientific", True)
             
-            # Removed hardcoded safeguard since we now allow all terms
+            # Robust safeguard: force is_scientific to false if the rejection message is present
+            rejection_phrase = "is not a scientific term"
+            rejection_te = "శాస్త్రీయ భావన కాదు"
+            rejection_hi = "वैज्ञानिक शब्द नहीं है"
+            if rejection_phrase in easy_def.lower() or rejection_te in easy_def or rejection_hi in easy_def:
+                is_scientific = False
 
-            if fetch_media:
+            if fetch_media and is_scientific:
                 media_query = data.get("core_term", query)
                 video_id = self.get_youtube_video(media_query)
 
@@ -140,6 +156,8 @@ class FastLLMService:
             final_translated = data.get("translated_term", query)
             if not is_scientific:
                 final_translated = query
+                examples = []
+                data["related_words"] = []
 
             result = {
                 "translated_term": final_translated,
@@ -223,7 +241,7 @@ class FastLLMService:
         try:
             base64_image = base64.b64encode(image_bytes).decode('utf-8')
             
-            vision_model = "meta-llama/llama-4-maverick-17b-128e-instruct"
+            vision_model = "qwen/qwen3.6-27b"
             
             lang_instruction = ""
             if language.lower() == "telugu":
@@ -254,6 +272,7 @@ class FastLLMService:
 
             chat_completion = self.client.chat.completions.create(
                 messages=[
+                    {"role": "system", "content": f"You are a world-class science tutor. Output valid JSON in {language}."},
                     {
                         "role": "user",
                         "content": [
@@ -267,18 +286,24 @@ class FastLLMService:
                         ],
                     }
                 ],
-                model="meta-llama/llama-4-maverick-17b-128e-instruct",
-                temperature=0.7,
-                max_tokens=1024,
-                response_format={"type": "json_object"},
+                model=vision_model,
+                temperature=0.3,
+                max_tokens=4000
             )
             
             response_content = chat_completion.choices[0].message.content
             
+            if "</think>" in response_content:
+                response_content = response_content.split("</think>")[-1].strip()
             if "```json" in response_content:
                 response_content = response_content.split("```json")[1].split("```")[0].strip()
             elif "```" in response_content:
                 response_content = response_content.split("```")[0].strip()
+            
+            start_idx = response_content.find('{')
+            end_idx = response_content.rfind('}')
+            if start_idx != -1 and end_idx != -1:
+                response_content = response_content[start_idx:end_idx+1]
             data = json.loads(response_content)
             
             video_id = self.get_youtube_video(data.get("term", "Science"))
@@ -296,7 +321,7 @@ class FastLLMService:
             return result
 
         except Exception as e:
-            print(f"❌ Groq Vision Error: {e}")
+            print(f"Groq Vision Error: {e}")
             return {
                 "term": "Error",
                 "definition": "Unable to analyze image at this time.",
@@ -391,7 +416,7 @@ class FastLLMService:
             }
 
         except Exception as e:
-            print(f"❌ Groq Quiz Generation Error: {e}")
+            print(f"Groq Quiz Generation Error: {e}")
     def transcribe_audio(self, audio_bytes: bytes, language: str = "en") -> dict:
         """Transcribe audio using Groq Whisper model"""
         start_time = time.time()
@@ -418,7 +443,7 @@ class FastLLMService:
                 if os.path.exists(tmp_path):
                     os.remove(tmp_path)
         except Exception as e:
-            print(f"❌ Groq Transcription Error: {e}")
+            print(f"Groq Transcription Error: {e}")
             return {"error": str(e)}
 
 llm_service = FastLLMService()
