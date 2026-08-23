@@ -94,7 +94,7 @@ function App() {
     setIsAuthenticated(false);
   };
   return (
-    <Router basename={process.env.PUBLIC_URL}>
+    <Router basename={process.env.NODE_ENV === 'production' ? process.env.PUBLIC_URL : ''}>
       <div className={`app ${isDarkMode ? 'dark-mode' : ''}`}>
         {!isQuizActive && (
           <Navbar
