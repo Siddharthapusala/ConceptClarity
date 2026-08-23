@@ -15,8 +15,8 @@ class FastLLMService:
         if not self.api_key:
             print("❌ GROQ_API_KEY not found in environment!")
         self.client = Groq(api_key=self.api_key)
-        self.text_model = "llama-3.3-70b-versatile"
-        self.fast_text_model = "llama-3.1-8b-instant"
+        self.text_model = "llama3-70b-8192"
+        self.fast_text_model = "llama3-8b-8192"
 
     def get_youtube_video(self, query: str) -> str:
         """Fetch the first YouTube video result for a query via scraping"""
@@ -160,7 +160,7 @@ class FastLLMService:
             return result
         except Exception as e:
             import traceback
-            print(f"❌ Groq Text Error: {e}")
+            print(f"Groq Text Error: {e}")
             print(traceback.format_exc())
             return self._get_fallback_explanation(query, start_time, language)
 
